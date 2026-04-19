@@ -3,32 +3,32 @@ on:
   workflow_dispatch:
     inputs:
       user_query:
-        description: 'Input from Bot'
+        description: 'Command from Telegram'
         required: true
 
 jobs:
-  run:
+  execute_mission:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Deps
+      - name: Install Dependencies
         run: pip install requests cloudscraper
 
-      - name: Execute Secret Logic
+      - name: Run Secret Engine
         env:
-          # ربط الأسرار بالبيئة لمرة واحدة فقط أثناء التشغيل
+          # ربط كافة الأسرار ببيئة التشغيل
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           HF_URL: ${{ secrets.HF_API_URL }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          GH_PAT: ${{ secrets.GH_PAT }}
           SECRET_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
           USER_INPUT: ${{ github.event.inputs.user_query }}
         run: |
-          # استخراج وتشغيل الكود من الذاكرة ثم حذفه
+          # فك تشفير وتشغيل المحرك المخفي
           echo "$SECRET_ENGINE" > engine.py
           python engine.py "$USER_INPUT"
           rm engine.py
 
-      - name: Cleanup
+      - name: Self-Destruct Cleanup
         if: always()
         run: rm -rf *
