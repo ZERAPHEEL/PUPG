@@ -3,32 +3,35 @@ on:
   workflow_dispatch:
     inputs:
       user_query:
-        description: 'Input Task'
+        description: 'Task Input'
         required: true
 
 jobs:
-  silent_execution:
+  execute:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Environment
         run: |
-          pip install requests yt-dlp cloudscraper playwright
-          playwright install chromium
+          pip install requests yt-dlp cloudscraper
+          # تثبيت الأدوات الأساسية فقط لضمان السرعة القصوى
 
       - name: Execute Secret Engine
         env:
-          # استخدام الأسماء الظاهرة في صورتك بالضبط
-          HIDDEN_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
+          # ربط الأسرار من الخزنة (مطابق لأسماء صورتك)
+          BOT_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           HF_URL: ${{ secrets.HF_API_URL }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           USER_INPUT: ${{ github.event.inputs.user_query }}
         run: |
-          echo "$HIDDEN_ENGINE" > .tmp_engine.py
-          python .tmp_engine.py "$USER_INPUT"
-          rm .tmp_engine.py
+          # تشغيل الكود المخفي من الذاكرة وحذفه فوراً بعد التنفيذ
+          echo "$BOT_ENGINE" > .engine.py
+          python .engine.py "$USER_INPUT"
+          rm .engine.py
 
-      - name: Self-Destruct
+      - name: Self-Destruct Cleanup
         if: always()
         run: |
           rm -rf *
+          echo "🧹 النظام نظيف تماماً، تم مسح كافة الملفات والآثار."
