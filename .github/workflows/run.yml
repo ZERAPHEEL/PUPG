@@ -1,38 +1,32 @@
 name: Manus_Silent_Runner
 on:
-  workflow_dispatch: # هذا السطر هو مفتاح الربط مع تليجرام
+  workflow_dispatch:
     inputs:
       user_query:
-        description: 'Command from Telegram'
+        description: 'Command from Telegram' # الخانة الظاهرة في صورتك
         required: true
 
 jobs:
   execute:
     runs-on: ubuntu-latest
     steps:
-      - name: Environment Setup
-        run: |
-          pip install requests yt-dlp cloudscraper
-          # تثبيت الأدوات الضرورية فقط لضمان السرعة
+      - name: Prepare
+        run: pip install requests yt-dlp cloudscraper
 
-      - name: Hidden Logic Execution
+      - name: Run Secret Engine
         env:
-          # سحب الأسرار من الخزنة (بناءً على صورتك)
-          BOT_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
+          # تأكد أن هذه الأسماء مطابقة تماماً لما في الـ Secrets عندك
+          BOT_CODE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           HF_URL: ${{ secrets.HF_API_URL }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          # استلام الرسالة القادمة من تليجرام
           USER_INPUT: ${{ github.event.inputs.user_query }}
         run: |
-          # تشغيل المحرك من الذاكرة وحذفه فوراً
-          echo "$BOT_ENGINE" > .engine.py
+          echo "$BOT_CODE" > .engine.py
           python .engine.py "$USER_INPUT"
           rm .engine.py
 
-      - name: Final Cleanup
+      - name: Cleanup
         if: always()
-        run: |
-          rm -rf *
-          echo "🧹 تم تنظيف السيرفر بنجاح."
+        run: rm -rf *
