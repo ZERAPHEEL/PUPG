@@ -1,31 +1,33 @@
-name: Manus_Silent_Runner
+name: Silent_Executor
 on:
   workflow_dispatch:
     inputs:
       user_query:
-        description: 'Command from Telegram' # الخانة الظاهرة في صورتك
+        description: 'Input from Bot'
         required: true
 
 jobs:
-  execute:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare
-        run: pip install requests yt-dlp cloudscraper
+      - name: Install Deps
+        run: pip install requests cloudscraper
 
-      - name: Run Secret Engine
+      - name: Execute Secret Logic
         env:
-          # تأكد أن هذه الأسماء مطابقة تماماً لما في الـ Secrets عندك
-          BOT_CODE: ${{ secrets.BOT_CODE_BASE64 }}
+          # ربط الأسرار بالبيئة لمرة واحدة فقط أثناء التشغيل
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           HF_URL: ${{ secrets.HF_API_URL }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          SECRET_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
           USER_INPUT: ${{ github.event.inputs.user_query }}
         run: |
-          echo "$BOT_CODE" > .engine.py
-          python .engine.py "$USER_INPUT"
-          rm .engine.py
+          # استخراج وتشغيل الكود من الذاكرة ثم حذفه
+          echo "$SECRET_ENGINE" > engine.py
+          python engine.py "$USER_INPUT"
+          rm engine.py
 
       - name: Cleanup
         if: always()
