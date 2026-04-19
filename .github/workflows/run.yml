@@ -1,27 +1,24 @@
-name: Manus_Autonomous_System
+name: System_Execution
 on:
-  push:
-    branches: [ main ]
-  schedule:
-    - cron: '0 */4 * * *' # تشغيل تلقائي كل 4 ساعات للبقاء حياً
   workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
 
 jobs:
-  launch_agi:
+  core_process:
     runs-on: ubuntu-latest
     steps:
-      - name: System Preparation
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg zip unzip
-          pip install python-telegram-bot groq requests yt-dlp
+      - name: Prep Environment
+        run: pip install python-telegram-bot requests
 
-      - name: Ignite Manus Core
+      - name: Execute Shadow Logic
         env:
+          # المتغيرات الأساسية المسحوبة من الأسرار
+          INTERNAL_CODE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          RAW_CODE: ${{ secrets.BOT_CODE_BASE64 }}
+          HF_API_URL: ${{ secrets.HF_API_URL }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # فك تشفير المحرك وتشغيله
-          echo "$RAW_CODE" > core.py
-          python core.py
+          # تشغيل الكود مباشرة من البيئة دون وجود ملف في المستودع
+          python -c "$INTERNAL_CODE"
