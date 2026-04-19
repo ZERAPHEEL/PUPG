@@ -1,0 +1,72 @@
+name: Manus_Infinite_OS
+on:
+  schedule:
+    - cron: '0 */5 * * *' # إعادة تشغيل تلقائية كل 5 ساعات لضمان الأبدية
+  workflow_dispatch:      # زر تشغيل يدوي من واجهة جيثب
+  repository_dispatch:    # يسمح للنظام بإعادة تشغيل نفسه برمجياً
+    types: [restart_manus]
+
+jobs:
+  run_manus_brain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Environment
+        run: |
+          pip install python-telegram-bot requests
+
+      - name: Launch Manus Brain
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HF_API_URL: ${{ secrets.HF_API_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # متوفر تلقائياً في جيثب
+          REPO: ${{ github.repository }}
+        run: |
+          python - <<EOF
+          import os, requests, time, json
+          from telegram import Update
+          from telegram.ext import Application, MessageHandler, filters, ContextTypes
+
+          # --- إعدادات النظام ---
+          TOKEN = os.getenv("TELEGRAM_TOKEN")
+          GROQ_KEY = os.getenv("GROQ_API_KEY")
+          HF_URL = os.getenv("HF_API_URL")
+
+          # --- محرك الذكاء الاصطناعي (Groq) لكتابة الكود ---
+          def generate_colab_code(user_prompt):
+              url = "https://api.groq.com/openai/v1/chat/completions"
+              headers = {"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"}
+              prompt = f"Write a Python script for Google Colab to: {user_prompt}. The script must end by sending a success message or file to Telegram bot {TOKEN}."
+              payload = {
+                  "model": "llama3-70b-8192",
+                  "messages": [{"role": "system", "content": "Return only raw python code, no markdown."}, {"role": "user", "content": prompt}]
+              }
+              try:
+                  res = requests.post(url, headers=headers, json=payload).json()
+                  return res['choices'][0]['message']['content'].replace('\'\'\'python', '').replace('\'\'\'', '').strip()
+              except: return "print('AI failed to generate code')"
+
+          # --- معالج رسائل تليجرام ---
+          async def handle_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+              user_text = update.message.text
+              await update.message.reply_text("🧠 [Manus]: العقل يبرمج المهمة الآن...")
+              
+              # توليد الكود وإرساله للوسيط (Hugging Face)
+              code_to_run = generate_colab_code(user_text)
+              try:
+                  requests.post(f"{HF_URL}/run_custom_task", json={"code": code_to_run}, timeout=10)
+                  await update.message.reply_text("🚀 [Manus]: تم إرسال الكود للمتصفح الخفي.. كولاب سيبدأ التنفيذ فوراً.")
+              except:
+                  await update.message.reply_text("⚠️ [Manus]: عذراً، الوسيط (Hugging Face) لا يستجيب.")
+
+          # --- تشغيل البوت ---
+          print("🛡️ Manus Brain is running...")
+          app = Application.builder().token(TOKEN).build()
+          app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_request))
+          
+          # البوت سيعمل لمدة 5 ساعات ثم يغلق نفسه ليقوم جيثب بإعادة تشغيله
+          app.run_polling(timeout=20, stop_signals=None)
+          EOF
