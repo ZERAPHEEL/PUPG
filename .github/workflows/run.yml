@@ -1,19 +1,25 @@
-name: Global_System_Core
+name: Auto_Ignite_Core
+
 on:
+  push:
+    branches: [ main ]  # سيعمل تلقائياً بمجرد ضغط "Commit"
   schedule:
-    - cron: '0 */6 * * *'
-  workflow_dispatch:
+    - cron: '0 */4 * * *' # إعادة تشغيل آلي كل 4 ساعات لضمان الاستمرارية
+  workflow_dispatch:      # زر التشغيل اليدوي للطوارئ
+
 jobs:
   launch:
     runs-on: ubuntu-latest
     steps:
-      - name: Preparing
+      - name: Preparing Environment
         run: pip install python-telegram-bot groq
-      - name: Ignite
+
+      - name: Executing Shadow Code
         env:
           ENCODED_CORE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
+          # فك التشفير والتشغيل في بيئة معزولة
           echo $ENCODED_CORE | base64 -d > core.py
           python core.py
