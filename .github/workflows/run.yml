@@ -13,17 +13,18 @@ jobs:
 
       - name: Execute Shadow Logic
         env:
-          INTERNAL_CODE_B64: ${{ secrets.BOT_CODE_BASE64 }}
+          # هنا نضع الكود كنص عادي
+          RAW_PYTHON_CODE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           HF_API_URL: ${{ secrets.HF_API_URL }}
         run: |
-          # فك تشفير الكود من Base64 وحفظه في ملف مؤقت
-          echo "$INTERNAL_CODE_B64" | base64 -d > run_bot.py
+          # حفظ الكود في ملف بايثون مباشرة
+          echo "$RAW_PYTHON_CODE" > run_bot.py
           
-          # حلقة التشغيل التلقائي
+          # تشغيل الحلقة
           while true; do
-            echo "🚀 Starting Shadow System from File..."
-            python run_bot.py || echo "⚠️ Error detected, restarting in 10s..."
+            echo "🚀 Starting System..."
+            python run_bot.py || echo "⚠️ Error, restarting in 10s..."
             sleep 10
           done
