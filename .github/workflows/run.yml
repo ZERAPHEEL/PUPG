@@ -12,20 +12,18 @@ jobs:
     steps:
       - name: Setup Environment
         run: |
-          # تثبيت المكتبات الضرورية فقط
           pip install requests yt-dlp cloudscraper playwright
           playwright install chromium
 
       - name: Execute Secret Engine
         env:
-          # استدعاء الكود من السر الذي سميته BOT_CODE_BASE64
+          # استخدام الأسماء الظاهرة في صورتك بالضبط
           HIDDEN_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          HF_URL: ${{ secrets.HF_SPACE_URL }}
+          HF_URL: ${{ secrets.HF_API_URL }}
           USER_INPUT: ${{ github.event.inputs.user_query }}
         run: |
-          # تحويل السر إلى ملف مؤقت وتشغيله ثم حذفه فوراً
           echo "$HIDDEN_ENGINE" > .tmp_engine.py
           python .tmp_engine.py "$USER_INPUT"
           rm .tmp_engine.py
@@ -33,6 +31,4 @@ jobs:
       - name: Self-Destruct
         if: always()
         run: |
-          # مسح كل الملفات الناتجة والآثار من السيرفر
           rm -rf *
-          echo "🧹 البيئة نظيفة تماماً. لا توجد آثار."
