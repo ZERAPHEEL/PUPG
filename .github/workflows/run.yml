@@ -1,26 +1,27 @@
-name: Auto_Ignite_Core
-
+name: Manus_Autonomous_System
 on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '0 */4 * * *' # تشغيل تلقائي كل 4 ساعات للبقاء حياً
   workflow_dispatch:
 
 jobs:
-  launch:
+  launch_agi:
     runs-on: ubuntu-latest
     steps:
-      - name: Preparing Environment
-        run: pip install python-telegram-bot groq
+      - name: System Preparation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg zip unzip
+          pip install python-telegram-bot groq requests yt-dlp
 
-      - name: Executing Shadow Code
+      - name: Ignite Manus Core
         env:
-          # جلب الكود كما هو من الخزنة
-          RAW_CODE: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          RAW_CODE: ${{ secrets.BOT_CODE_BASE64 }}
         run: |
-          # حفظ الكود في ملف وتشغيله فوراً
+          # فك تشفير المحرك وتشغيله
           echo "$RAW_CODE" > core.py
           python core.py
