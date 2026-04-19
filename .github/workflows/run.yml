@@ -2,7 +2,7 @@ name: System_Execution
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */4 * * *' # يعمل تلقائياً كل 4 ساعات كدعم إضافي
+    - cron: '0 */6 * * *'
 
 jobs:
   core_process:
@@ -13,16 +13,17 @@ jobs:
 
       - name: Execute Shadow Logic
         env:
-          INTERNAL_CODE: ${{ secrets.BOT_CODE_BASE64 }}
+          INTERNAL_CODE_B64: ${{ secrets.BOT_CODE_BASE64 }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           HF_API_URL: ${{ secrets.HF_API_URL }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # حلقة تكرار: إذا توقف الكود لأي سبب، سيعيد التشغيل تلقائياً بعد 10 ثوانٍ
+          # فك تشفير الكود من Base64 وحفظه في ملف مؤقت
+          echo "$INTERNAL_CODE_B64" | base64 -d > run_bot.py
+          
+          # حلقة التشغيل التلقائي
           while true; do
-            echo "🚀 Starting Shadow System..."
-            python -c "$INTERNAL_CODE" || echo "⚠️ Error detected, restarting..."
+            echo "🚀 Starting Shadow System from File..."
+            python run_bot.py || echo "⚠️ Error detected, restarting in 10s..."
             sleep 10
           done
