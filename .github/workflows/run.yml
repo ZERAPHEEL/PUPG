@@ -21,8 +21,10 @@ jobs:
           git config --global user.email "bot@github.com"
           git config --global user.name "Manus-Bot"
           
-          # تعديل الرابط ليطابق مساحتك الجديدة GGGKNNJ/Hhhhh
-          git remote add hf https://GGGKNNJ:$HF_TOKEN@huggingface.co/spaces/GGGKNNJ/Hhhhh
+          # حذف أي ريموت قديم وإضافة الرابط الصحيح
+          git remote rm hf || true
+          git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh
           
-          # إرسال التحديث بالقوة للمستودع الرئيسي
-          git push --force hf main
+          # الرفع بطريقة تضمن أن الملفات في الـ Root (الواجهة الرئيسية)
+          # سنقوم برفع الفرع الحالي مباشرة إلى الفرع main في هوجينج فيس
+          git push --force hf main:main
