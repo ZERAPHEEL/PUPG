@@ -1,54 +1,42 @@
-name: Eternal_Secret_Overseer
+name: Manus-Zero Autonomous OS
+
 on:
-  push:
-    branches: [main]
-  repository_dispatch:
-    types: [keep_alive]
-  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *' # يعمل تلقائياً كل 6 ساعات لضمان استمرار النبض
+  workflow_dispatch: # يتيح لك تشغيله يدوياً من جيثب أو عبر شفرة ZERAFEL
 
 jobs:
-  overseer:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Environment
-        run: pip install pynacl requests pyTelegramBotAPI
+    
+    # تحديد المدة القصوى للتشغيل (جيثب يعطي حتى 6 ساعات)
+    timeout-minutes: 350 
 
-      - name: Inject and Execute Core
+    steps:
+      - name: 📥 سحب الكود من المستودع
+        uses: actions/checkout@v3
+
+      - name: 🐍 إعداد بيئة بايثون
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 تثبيت المكتبات الأساسية والمتصفح البصري
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyTelegramBotAPI groq pynacl requests playwright pillow
+          # تثبيت محرك كروميوم اللازم للتصفح البصري (OpenClaw Style)
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: ⚙️ تشغيل Manus-Zero (العقل والجسد)
         env:
+          # ربط الأسرار المخزنة في جيثب بالكود
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          # استدعاء الذاكرة المشفرة إن وجدت
           PROJECT_MEMORY: ${{ secrets.PROJECT_MEMORY }}
-          PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
         run: |
-          # 1. استخراج كود العقل المدبر من الأسرار إلى ملف main.py
-          echo "$PROJECT_CORE" > main.py
-          
-          # 2. التأكد من وجود ملف app.py للمختبر
-          cat <<EOF > app.py
-          import os, subprocess
-          from flask import Flask
-          app = Flask(__name__)
-          @app.route('/')
-          def h(): return "Lab Active"
-          if __name__ == "__main__":
-              app.run(host="0.0.0.0", port=7860)
-          EOF
-          
-          # 3. تشغيل العقل (الذي يحدّث الذاكرة برمجياً)
-          echo "🚀 البدء في تشغيل العقل المدبر..."
-          python main.py
-
-      - name: Keep Alive Pulse
-        if: always() # يضمن الاستمرار حتى لو فشل الكود أعلاه
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          sleep 20
-          curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"event_type": "keep_alive"}'
+          # تشغيل الملف الأساسي الذي يحتوي على الكود الموحد
+          python run.py
