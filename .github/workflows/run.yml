@@ -1,53 +1,45 @@
-name: Ultimate_Overseer_System
+name: Intelligent_Overseer_v2
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '*/15 * * * *' # يشتغل تلقائياً كل 15 دقيقة للفحص
   workflow_dispatch:
-  # هذا السطر يجعل جيثب يستمع لطلبات "المختبر" في هوجينج فيس
-  repository_dispatch:
-    types: [trigger_factory]
 
 jobs:
-  # المهمة الأولى: تحديث المختبر (HuggingFace)
-  sync_lab:
+  monitor_and_repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Build and Push Lab
-        run: |
-          echo "FROM python:3.9" > Dockerfile
-          echo "RUN apt-get update && apt-get install -y chromium chromium-driver libgl1 libglib2.0-0 ffmpeg && rm -rf /var/lib/apt/lists/*" >> Dockerfile
-          echo "WORKDIR /app\nCOPY . .\nRUN pip install flask pyTelegramBotAPI selenium requests opencv-python-headless SpeechRecognition pydub\nCMD [\"python\", \"app.py\"]" >> Dockerfile
-          
-          cat <<EOF > app.py
-          import os, subprocess
-          from flask import Flask
-          app = Flask(__name__)
-          os.environ['PROJECT_CORE'] = """${{ secrets.PROJECT_CORE }}"""
-          os.environ['TELEGRAM_TOKEN'] = "${{ secrets.TELEGRAM_TOKEN }}"
-          os.environ['GROQ_API_KEY'] = "${{ secrets.GROQ_API_KEY }}"
-          os.environ['GH_TOKEN'] = "${{ secrets.GH_TOKEN }}" # توكن الإشراف
-          
-          if os.getenv('PROJECT_CORE'):
-              with open("main.py", "w", encoding="utf-8") as f: f.write(os.getenv('PROJECT_CORE'))
-              subprocess.Popen(["python", "main.py"])
-          app.run(host="0.0.0.0", port=7860)
-          EOF
 
-          git config --global user.email "overseer@github.com"
-          git config --global user.name "The-Overseer"
-          git add . && git commit -m "Sync Lab" || echo ""
-          git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh || true
-          git push --force hf main
-
-  # المهمة الثانية: تشغيل المصنع (Colab) عند الحاجة
-  run_factory:
-    if: github.event.action == 'trigger_factory'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Activate Colab Factory
+      - name: Health Check & Groq Analysis
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "🚀 المشرف جيثب يستدعي المصنع كولاب لتنفيذ مهمة: ${{ github.event.client_payload.task }}"
-          # هنا يوضع سكريبت السيلينيوم الذي يفتح كولاب ويشغل الأتمتة الثقيلة
+          # 1. فحص حالة المختبر في هوجينج فيس
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" https://huggingface.co/spaces/GGGKNNJ/Hhhhh)
+          
+          if [ $STATUS -ne 200 ]; then
+            echo "⚠️ المختبر متوقف أو به خلل (Status: $STATUS)"
+            
+            # 2. استدعاء ذكاء جروك لتشخيص المشكلة (أتمتة القرار)
+            REPAIR_STRATEGY=$(curl -X POST "https://api.groq.com/openai/v1/chat/completions" \
+              -H "Authorization: Bearer $GROQ_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "system", "content": "You are a DevOps AI. The HuggingFace Space is down with status '$STATUS'. Suggest a repair: REDEPLOY or REBOOT."}, 
+                             {"role": "user", "content": "Fix it."}]
+              }' | jq -r '.choices[0].message.content')
+
+            echo "🧠 قرار جروك: $REPAIR_STRATEGY"
+            
+            # 3. تنفيذ الإصلاح آلياً
+            if [[ "$REPAIR_STRATEGY" == *"REDEPLOY"* ]]; then
+               echo "🛠️ جاري إعادة بناء المصنع بالكامل..."
+               # (هنا نضع كود الـ git push force الذي استخدمناه سابقاً)
+            fi
+          else
+            echo "✅ النظام يعمل بكفاءة، لا داعي للتدخل."
+          fi
