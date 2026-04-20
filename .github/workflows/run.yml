@@ -1,24 +1,53 @@
-name: System_Overseer
+name: Ultimate_Overseer_System
 on:
   push:
     branches: [main]
-  # هذا السطر يجعل جيثب يراقب أي تنبيه يأتي من البوت (هوجينج فيس)
+  workflow_dispatch:
+  # هذا السطر يجعل جيثب يستمع لطلبات "المختبر" في هوجينج فيس
   repository_dispatch:
-    types: [heavy_task_request]
+    types: [trigger_factory]
 
 jobs:
-  monitor_and_deploy:
+  # المهمة الأولى: تحديث المختبر (HuggingFace)
+  sync_lab:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Sync to Workshop (HuggingFace)
-        # (نفس كود الرفع السابق لضمان أن المختبر محدث دائماً)
+        with:
+          fetch-depth: 0
+      - name: Build and Push Lab
+        run: |
+          echo "FROM python:3.9" > Dockerfile
+          echo "RUN apt-get update && apt-get install -y chromium chromium-driver libgl1 libglib2.0-0 ffmpeg && rm -rf /var/lib/apt/lists/*" >> Dockerfile
+          echo "WORKDIR /app\nCOPY . .\nRUN pip install flask pyTelegramBotAPI selenium requests opencv-python-headless SpeechRecognition pydub\nCMD [\"python\", \"app.py\"]" >> Dockerfile
+          
+          cat <<EOF > app.py
+          import os, subprocess
+          from flask import Flask
+          app = Flask(__name__)
+          os.environ['PROJECT_CORE'] = """${{ secrets.PROJECT_CORE }}"""
+          os.environ['TELEGRAM_TOKEN'] = "${{ secrets.TELEGRAM_TOKEN }}"
+          os.environ['GROQ_API_KEY'] = "${{ secrets.GROQ_API_KEY }}"
+          os.environ['GH_TOKEN'] = "${{ secrets.GH_TOKEN }}" # توكن الإشراف
+          
+          if os.getenv('PROJECT_CORE'):
+              with open("main.py", "w", encoding="utf-8") as f: f.write(os.getenv('PROJECT_CORE'))
+              subprocess.Popen(["python", "main.py"])
+          app.run(host="0.0.0.0", port=7860)
+          EOF
 
-  handle_heavy_task:
-    if: github.event.action == 'heavy_task_request'
+          git config --global user.email "overseer@github.com"
+          git config --global user.name "The-Overseer"
+          git add . && git commit -m "Sync Lab" || echo ""
+          git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh || true
+          git push --force hf main
+
+  # المهمة الثانية: تشغيل المصنع (Colab) عند الحاجة
+  run_factory:
+    if: github.event.action == 'trigger_factory'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Factory (Colab)
+      - name: Activate Colab Factory
         run: |
-          echo "جيثب تلقى أمراً بمهمة ثقيلة.. جاري استدعاء المصنع (Colab)..."
-          # هنا جيثب يستخدم API لفتح كولاب أو تشغيل سكربت أتمتة ثقيل
+          echo "🚀 المشرف جيثب يستدعي المصنع كولاب لتنفيذ مهمة: ${{ github.event.client_payload.task }}"
+          # هنا يوضع سكريبت السيلينيوم الذي يفتح كولاب ويشغل الأتمتة الثقيلة
