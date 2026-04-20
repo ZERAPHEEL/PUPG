@@ -1,4 +1,4 @@
-name: Ultimate_Stealth_System
+name: Universal_Stealth_System
 on:
   push:
     branches: [main]
@@ -13,9 +13,9 @@ jobs:
         with:
           fetch-depth: 0 
 
-      - name: Build System Files
+      - name: Build and Inject System
         run: |
-          # 1. إنشاء Dockerfile
+          # 1. إنشاء Dockerfile مع مكتبات الصور والصوت
           cat <<EOF > Dockerfile
           FROM python:3.9
           RUN apt-get update && apt-get install -y \\
@@ -31,41 +31,42 @@ jobs:
           CMD ["python", "app.py"]
           EOF
 
-          # 2. إنشاء المحرك (app.py) وحقن الأسرار مباشرة من جيثب
+          # 2. إنشاء app.py مع حقن الأسرار مباشرة
           cat <<EOF > app.py
-          import os, subprocess
+          import os, subprocess, time
           from flask import Flask
           app = Flask(__name__)
-          
-          # حقن الأسرار برمجياً (تنتقل من جيثب للملف مباشرة)
+
+          # حقن الأسرار من جيثب إلى بيئة التشغيل
           os.environ['PROJECT_CORE'] = """${{ secrets.PROJECT_CORE }}"""
           os.environ['TELEGRAM_TOKEN'] = "${{ secrets.TELEGRAM_TOKEN }}"
           os.environ['GROQ_API_KEY'] = "${{ secrets.GROQ_API_KEY }}"
           os.environ['GOOGLE_COOKIES'] = """${{ secrets.GOOGLE_COOKIES }}"""
 
           @app.route('/')
-          def h(): return "Workshop Active - Secure Bridge"
-          
-          # تشغيل العقل
-          with open("main.py", "w", encoding="utf-8") as f:
-              f.write(os.environ['PROJECT_CORE'])
-          
-          subprocess.Popen(["python", "main.py"])
-          
+          def health(): return "Workshop Status: Operational"
+
+          # تشغيل العقل الذكي
+          if os.getenv('PROJECT_CORE'):
+              with open("main.py", "w", encoding="utf-8") as f:
+                  f.write(os.getenv('PROJECT_CORE'))
+              # تشغيل في الخلفية لضمان بقاء Flask يعمل
+              subprocess.Popen(["python", "main.py"])
+
           if __name__ == "__main__":
               app.run(host="0.0.0.0", port=7860)
           EOF
 
-          # 3. ملف الهوية
-          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\n---" > README.md
+          # 3. ملف التعريف
+          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\nemoji: 🛡️\n---" > README.md
 
-      - name: Push to HF Workshop
+      - name: Force Push to Workshop
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git config --global user.email "master@github.com"
           git config --global user.name "Architect"
           git add .
-          git commit -m "Secure Injection Deployment" || echo "No changes"
+          git commit -m "Full Core Injection" || echo "No changes"
           git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh || true
           git push --force hf main
