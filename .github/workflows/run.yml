@@ -1,4 +1,4 @@
-name: Ultimate_Stealth_Memory
+name: Eternal_Secret_Overseer
 on:
   push:
     branches: [main]
@@ -10,26 +10,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Setup Environment
+        run: pip install pynacl requests pyTelegramBotAPI
 
-      - name: Install Encryption Tools
-        run: pip install pynacl requests
-
-      - name: System Logic & Stealth Memory
+      - name: Executing System Logic
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           PROJECT_MEMORY: ${{ secrets.PROJECT_MEMORY }}
         run: |
-          # تشغيل العقل المدبر
-          # سيقوم البوت بقراءة PROJECT_MEMORY من الرام
-          # ثم سيقوم بتحديثها برمجياً في نهاية التشغيل
+          # حقن كود العقل المدبر في ملف مؤقت وتشغيله
+          cat <<EOF > app.py
+          import os, subprocess
+          from flask import Flask
+          app = Flask(__name__)
+          @app.route('/')
+          def h(): return "Lab Active"
+          if os.getenv('PROJECT_CORE'):
+              with open("main.py", "w", encoding="utf-8") as f: f.write(os.getenv('PROJECT_CORE'))
+              subprocess.Popen(["python", "main.py"])
+          app.run(host="0.0.0.0", port=7860)
+          EOF
+          
+          # تشغيل العقل (الذي يحدّث الذاكرة برمجياً)
           python main.py
 
-      - name: Trigger Next Cycle
+      - name: Keep Alive Pulse
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          sleep 15
+          sleep 20
           curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
             -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
             -d '{"event_type": "keep_alive"}'
