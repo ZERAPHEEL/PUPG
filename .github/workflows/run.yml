@@ -1,9 +1,7 @@
 name: Manus-Zero Ghost OS
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
+  workflow_dispatch: # لتشغيله يدوياً
 
 jobs:
   build:
@@ -13,15 +11,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python_version: '3.10'
 
-      - name: تشغيل المحرك السيادي
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyTelegramBotAPI requests gradio_client Pillow
+
+      - name: Create runner script
+        run: echo "$PROJECT_CORE" > runner.py
+        env:
+          PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
+
+      - name: Run Manus-Zero
+        run: python runner.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
-        run: |
-          echo "$PROJECT_CORE" > runner.py
-          python3 runner.py
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
