@@ -1,42 +1,23 @@
-name: Manus-Zero Autonomous OS
+name: Manus-Zero Ghost OS
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # يعمل تلقائياً كل 6 ساعات لضمان استمرار النبض
-  workflow_dispatch: # يتيح لك تشغيله يدوياً من جيثب أو عبر شفرة ZERAFEL
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    # تحديد المدة القصوى للتشغيل (جيثب يعطي حتى 6 ساعات)
-    timeout-minutes: 350 
+    timeout-minutes: 350
 
     steps:
-      - name: 📥 سحب الكود من المستودع
-        uses: actions/checkout@v3
-
-      - name: 🐍 إعداد بيئة بايثون
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: 📦 تثبيت المكتبات الأساسية والمتصفح البصري
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyTelegramBotAPI groq pynacl requests playwright pillow
-          # تثبيت محرك كروميوم اللازم للتصفح البصري (OpenClaw Style)
-          playwright install chromium
-          playwright install-deps chromium
-
-      - name: ⚙️ تشغيل Manus-Zero (العقل والجسد)
+      - name: 🚀 Execution from Secrets
         env:
-          # ربط الأسرار المخزنة في جيثب بالكود
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          # استدعاء الذاكرة المشفرة إن وجدت
+          PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
           PROJECT_MEMORY: ${{ secrets.PROJECT_MEMORY }}
         run: |
-          # تشغيل الملف الأساسي الذي يحتوي على الكود الموحد
-          python run.py
+          # تنفيذ الكود المخزن في السر مباشرة
+          python3 -c "import os; exec(os.getenv('PROJECT_CORE'))"
