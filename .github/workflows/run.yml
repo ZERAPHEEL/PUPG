@@ -10,10 +10,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # حل مشكلة shallow update crucial
 
       - name: Build System Files
         run: |
-          # إنشاء Dockerfile برمجياً مع مكتبات الصور والصوت
+          # 1. إنشاء ملف البيئة (Dockerfile) مع دعم الصور والصوت والكروم
           cat <<EOF > Dockerfile
           FROM python:3.9
           RUN apt-get update && apt-get install -y \\
@@ -29,15 +31,15 @@ jobs:
           CMD ["python", "app.py"]
           EOF
 
-          # إنشاء المحرك الرئيسي الذي يستدعي "السر"
+          # 2. إنشاء ملف المحرك (app.py) الذي يسحب "العقل" من الأسرار
           cat <<EOF > app.py
           import os, subprocess, base64
           from flask import Flask
           app = Flask(__name__)
           @app.route('/')
-          def h(): return "System Online - 16GB RAM"
+          def h(): return "System Online - Universal Hub 16GB"
           
-          # استخراج العقل الكامل (PROJECT_CORE) من أسرار جيثب
+          # استدعاء PROJECT_CORE من أسرار جيثب/هوجينج
           core_data = os.getenv('PROJECT_CORE')
           if core_data:
               with open("main.py", "w", encoding="utf-8") as f:
@@ -48,16 +50,19 @@ jobs:
               app.run(host="0.0.0.0", port=7860)
           EOF
 
-          # ملف التعريف الصامت لهوجينج فيس
-          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\nemoji: 🛡️\n---" > README.md
+          # 3. إنشاء ملف الهوية (README.md) المطلوب لهوجينج فيس
+          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\nemoji: 🛡️\ncolorFrom: black\ncolorTo: gray\n---" > README.md
 
       - name: Push to HF Workshop
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # إعداد الهوية للرفع
           git config --global user.email "master@github.com"
           git config --global user.name "Architect"
+          
+          # إجبار جيثب على دفع الملفات بقوة ومسح التاريخ القديم المتعارض
           git add .
-          git commit -m "Update Core" || echo "No changes"
+          git commit -m "System Reconstruction" || echo "No changes"
           git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh || true
           git push --force hf main
