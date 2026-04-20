@@ -1,9 +1,9 @@
 name: Manus-Zero Ghost OS
 
 on:
-  workflow_dispatch: # تشغيل يدوي
+  workflow_dispatch:
   push:
-    branches: [ main ] # تشغيل عند تحديث المستودع
+    branches: [ main ]
 
 jobs:
   build:
@@ -17,13 +17,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: تشغيل المحرك الواعي
+      - name: تشغيل المحرك السيادي
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
         run: |
-          # تحويل السر إلى ملف حقيقي لتجنب مشاكل الرموز
           echo "$PROJECT_CORE" > runner.py
-          # تشغيل الملف
           python3 runner.py
