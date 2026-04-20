@@ -1,23 +1,29 @@
 name: Manus-Zero Ghost OS
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
-  workflow_dispatch:
+  workflow_dispatch: # تشغيل يدوي
+  push:
+    branches: [ main ] # تشغيل عند تحديث المستودع
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
-
     steps:
-      - name: 🚀 Execution from Secrets
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: تشغيل المحرك الواعي
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
-          PROJECT_MEMORY: ${{ secrets.PROJECT_MEMORY }}
         run: |
-          # تنفيذ الكود المخزن في السر مباشرة
-          python3 -c "import os; exec(os.getenv('PROJECT_CORE'))"
+          # تحويل السر إلى ملف حقيقي لتجنب مشاكل الرموز
+          echo "$PROJECT_CORE" > runner.py
+          # تشغيل الملف
+          python3 runner.py
