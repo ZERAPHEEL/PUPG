@@ -11,11 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # حل مشكلة shallow update crucial
+          fetch-depth: 0 
 
       - name: Build System Files
         run: |
-          # 1. إنشاء ملف البيئة (Dockerfile) مع دعم الصور والصوت والكروم
+          # 1. إنشاء Dockerfile
           cat <<EOF > Dockerfile
           FROM python:3.9
           RUN apt-get update && apt-get install -y \\
@@ -31,38 +31,41 @@ jobs:
           CMD ["python", "app.py"]
           EOF
 
-          # 2. إنشاء ملف المحرك (app.py) الذي يسحب "العقل" من الأسرار
+          # 2. إنشاء المحرك (app.py) وحقن الأسرار مباشرة من جيثب
           cat <<EOF > app.py
-          import os, subprocess, base64
+          import os, subprocess
           from flask import Flask
           app = Flask(__name__)
-          @app.route('/')
-          def h(): return "System Online - Universal Hub 16GB"
           
-          # استدعاء PROJECT_CORE من أسرار جيثب/هوجينج
-          core_data = os.getenv('PROJECT_CORE')
-          if core_data:
-              with open("main.py", "w", encoding="utf-8") as f:
-                  f.write(core_data)
-              subprocess.Popen(["python", "main.py"])
+          # حقن الأسرار برمجياً (تنتقل من جيثب للملف مباشرة)
+          os.environ['PROJECT_CORE'] = """${{ secrets.PROJECT_CORE }}"""
+          os.environ['TELEGRAM_TOKEN'] = "${{ secrets.TELEGRAM_TOKEN }}"
+          os.environ['GROQ_API_KEY'] = "${{ secrets.GROQ_API_KEY }}"
+          os.environ['GOOGLE_COOKIES'] = """${{ secrets.GOOGLE_COOKIES }}"""
+
+          @app.route('/')
+          def h(): return "Workshop Active - Secure Bridge"
+          
+          # تشغيل العقل
+          with open("main.py", "w", encoding="utf-8") as f:
+              f.write(os.environ['PROJECT_CORE'])
+          
+          subprocess.Popen(["python", "main.py"])
           
           if __name__ == "__main__":
               app.run(host="0.0.0.0", port=7860)
           EOF
 
-          # 3. إنشاء ملف الهوية (README.md) المطلوب لهوجينج فيس
-          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\nemoji: 🛡️\ncolorFrom: black\ncolorTo: gray\n---" > README.md
+          # 3. ملف الهوية
+          echo -e "---\ntitle: GGGKNNJ\nsdk: docker\n---" > README.md
 
       - name: Push to HF Workshop
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # إعداد الهوية للرفع
           git config --global user.email "master@github.com"
           git config --global user.name "Architect"
-          
-          # إجبار جيثب على دفع الملفات بقوة ومسح التاريخ القديم المتعارض
           git add .
-          git commit -m "System Reconstruction" || echo "No changes"
+          git commit -m "Secure Injection Deployment" || echo "No changes"
           git remote add hf https://GGGKNNJ:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/GGGKNNJ/Hhhhh || true
           git push --force hf main
