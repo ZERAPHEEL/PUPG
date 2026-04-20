@@ -1,34 +1,39 @@
-name: Silent_Executor
+name: run
+
 on:
-  workflow_dispatch:
-    inputs:
-      user_query:
-        description: 'Command from Telegram'
-        required: true
+  push:
+    branches: [ main ]
+  workflow_dispatch: # للتشغيل اليدوي من الهاتف
 
 jobs:
-  execute_mission:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Dependencies
-        run: pip install requests cloudscraper
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Run Secret Engine
+      - name: Install HF CLI
+        run: pip install huggingface_hub
+
+      - name: Deploy and Sync Secrets
         env:
-          # ربط كافة الأسرار ببيئة التشغيل
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          HF_URL: ${{ secrets.HF_API_URL }}
+          # سحب التوكن والروابط من أسرار جيثب (الموجودة في صورتك)
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          SECRET_ENGINE: ${{ secrets.BOT_CODE_BASE64 }}
-          USER_INPUT: ${{ github.event.inputs.user_query }}
+          HF_URL: ${{ secrets.HF_API_URL }}
+          # الأسرار الأخرى التي سيتم تمريرها للتطبيق
+          COOKIES: ${{ secrets.GOOGLE_COOKIES }}
+          BOT_CODE: ${{ secrets.BOT_CODE_BASE64 }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         run: |
-          # فك تشفير وتشغيل المحرك المخفي
-          echo "$SECRET_ENGINE" > engine.py
-          python engine.py "$USER_INPUT"
-          rm engine.py
-
-      - name: Self-Destruct Cleanup
-        if: always()
-        run: rm -rf *
+          # إعداد الهوية لرفع الملفات
+          git config --global user.email "bot@github.com"
+          git config --global user.name "Manus-Bot"
+          
+          # استخراج اسم المستخدم والمستودع من الرابط الموجود في أسرارك
+          # ملاحظة: تأكد أن HF_API_URL يحتوي على رابط الـ Space
+          git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/ZERAPHEEL/PUPG
+          
+          # رفع الأكواد (app.py, Dockerfile, etc) إلى هوجينج فيس
+          git push --force hf main
