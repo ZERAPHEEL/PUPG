@@ -3,12 +3,14 @@ name: Manus-Zero Autonomous OS
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'  # تشغيل احتياطي كل 6 ساعات
+    - cron: '0 */6 * * *'
+  push:
+    branches: [ "main" ]
 
 jobs:
   run-manus-core:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 ساعات كاملة
+    timeout-minutes: 360
 
     steps:
       - name: 📥 سحب الكود من المستودع
@@ -40,4 +42,4 @@ jobs:
           GOOGLE_COOKIES: ${{ secrets.GOOGLE_COOKIES }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          GT_TOKEN: ${{ secrets.GT_TOKEN }}   # ✅ تم التعديل ليطابق اسم السر الخاص بك
+          GT_TOKEN: ${{ secrets.GT_TOKEN }}
