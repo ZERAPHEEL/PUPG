@@ -1,0 +1,21 @@
+name: الطبيب الآلي لسير العمل
+
+on:
+  workflow_run:
+    workflows: ["Manus-Zero Autonomous OS"]
+    types: [completed]
+
+jobs:
+  heal:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: 🔍 تشغيل وكيل الإصلاح الذاتي
+        uses: JAI0705/DevOps_Pipeline_healer_agent@v1
+        with:
+          groq-api-key: ${{ secrets.GROQ_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
