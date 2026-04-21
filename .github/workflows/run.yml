@@ -1,30 +1,35 @@
 name: Manus-Zero Autonomous OS
 
 on:
-  workflow_dispatch: # تشغيل يدوي من صفحة Actions
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */5 * * *'  # إعادة تشغيل تلقائية كل 5 ساعات لمنع التوقف
 
 jobs:
-  launch-core:
+  run-manus-core:
     runs-on: ubuntu-latest
+    timeout-minutes: 340  # 5 ساعات و40 دقيقة (الحد الأقصى قبل إعادة التشغيل)
+    
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up System Python
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python_version: '3.10'
+          python-version: '3.10'
 
-      - name: Install Compute Engines
+      - name: Install Dependencies
         run: |
-          pip install pyTelegramBotAPI google-generativeai requests g4f Pillow
+          python -m pip install --upgrade pip
+          pip install pyTelegramBotAPI google-generativeai requests Pillow
 
-      - name: Deploy Core Logic
+      - name: Deploy Project Core
         run: echo "$PROJECT_CORE" > core.py
         env:
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
 
-      - name: Start Manus-Zero
+      - name: Launch Manus-Zero
         run: python core.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
