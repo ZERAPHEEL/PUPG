@@ -3,7 +3,7 @@ name: Manus-Zero Autonomous OS
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'  # يُشغّل كل 6 ساعات (احتياطيًا بجانب الانبعاث الذاتي)
+    - cron: '0 */6 * * *'  # تشغيل احتياطي كل 6 ساعات
 
 jobs:
   run-manus-core:
@@ -40,4 +40,4 @@ jobs:
           GOOGLE_COOKIES: ${{ secrets.GOOGLE_COOKIES }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          GHI_TOKEN: ${{ secrets.GHI_TOKEN }}   # المفتاح السحري للانبعاث الذاتي
+          GT_TOKEN: ${{ secrets.GT_TOKEN }}   # ✅ تم التعديل ليطابق اسم السر الخاص بك
