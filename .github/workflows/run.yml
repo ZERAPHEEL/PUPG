@@ -3,51 +3,34 @@ name: Manus-Zero Autonomous OS
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */5 * * *'
+    - cron: '0 */6 * * *'  # يُشغّل كل 6 ساعات (احتياطيًا بجانب الانبعاث الذاتي)
 
 jobs:
   run-manus-core:
     runs-on: ubuntu-latest
-    timeout-minutes: 340
-    
+    timeout-minutes: 360  # 6 ساعات كاملة
+
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 سحب الكود من المستودع
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python 3.10
+      - name: 🐍 إعداد بيئة بايثون
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 📦 Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential
-
-      - name: 📚 Install Python Dependencies
+      - name: 📦 تثبيت الحزم الأساسية والاعتماديات
         run: |
           python -m pip install --upgrade pip
           pip install pyTelegramBotAPI google-generativeai requests Pillow
-          pip install chromadb sentence-transformers
-          pip install huggingface_hub
+          pip install chromadb sentence-transformers python-dotenv
 
-      - name: 🔐 Deploy Project Core
+      - name: 🔐 فك تشفير العقل التنفيذي من الأسرار
         run: echo "$PROJECT_CORE" > core.py
         env:
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
 
-      - name: 🔐 Deploy Project Memory (Optional)
-        run: |
-          if [ ! -z "$PROJECT_MEMORY" ]; then
-            echo "$PROJECT_MEMORY" > memory_backup.json
-            echo "✅ تم تحميل نسخة الذاكرة الاحتياطية"
-          else
-            echo "ℹ️ لا توجد ذاكرة احتياطية"
-          fi
-        env:
-          PROJECT_MEMORY: ${{ secrets.PROJECT_MEMORY }}
-
-      - name: 🚀 Launch Manus-Zero
+      - name: 🚀 إطلاق وكيل Manus-Zero
         run: python core.py
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -57,29 +40,4 @@ jobs:
           GOOGLE_COOKIES: ${{ secrets.GOOGLE_COOKIES }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          GH_PAT: ${{ secrets.GH_PAT }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: 💾 Backup Memory (If Changed)
-        if: always()
-        run: |
-          if [ -f "MEMORY_INDEX.md" ]; then
-            echo "📝 حفظ نسخة احتياطية من الذاكرة..."
-            cat MEMORY_INDEX.md
-          fi
-          if [ -d "project_memory_db" ]; then
-            echo "💾 حفظ قاعدة البيانات..."
-            tar -czf memory_db_backup.tar.gz project_memory_db/
-          fi
-
-      - name: 📊 Session Summary
-        if: always()
-        run: |
-          echo "========================================="
-          echo "📊 تقرير الجلسة"
-          echo "========================================="
-          echo "🕐 الوقت: $(date)"
-          echo "💾 حجم قاعدة الذاكرة: $(du -sh project_memory_db/ 2>/dev/null || echo 'لا توجد')"
-          echo "📁 الملفات المنشأة:"
-          ls -la *.py *.md *.json 2>/dev/null || echo "لا يوجد"
-          echo "========================================="
+          GHI_TOKEN: ${{ secrets.GHI_TOKEN }}   # المفتاح السحري للانبعاث الذاتي
