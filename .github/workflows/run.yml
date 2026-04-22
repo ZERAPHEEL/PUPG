@@ -39,6 +39,6 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_API_URL: ${{ secrets.HF_API_URL }}
           GOOGLE_COOKIES: ${{ secrets.GOOGLE_COOKIES }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}   # ✅ هذا هو السطر المفقود
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GT_TOKEN: ${{ secrets.GT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
