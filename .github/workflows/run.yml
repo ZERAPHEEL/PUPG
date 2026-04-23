@@ -1,17 +1,16 @@
-name: ZERAPHEEL Autonomous OS
+name: Deploy ZERAPHEEL
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */6 * * *'
   push:
     branches: [ "main" ]
 
-jobs:
-  run-zerapheel-core:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+permissions:
+  contents: read
 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 سحب الكود
         uses: actions/checkout@v4
@@ -21,38 +20,16 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: 📦 تثبيت Node.js (مطلوب لـ OpenClaw)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: 📦 تثبيت المتطلبات
+        run: pip install huggingface_hub
 
-      - name: 📦 تثبيت الحزم الأساسية
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyTelegramBotAPI requests Pillow
-          pip install chromadb sentence-transformers
-          pip install google-generativeai
-          pip install duckduckgo-search wikipedia curl_cffi beautifulsoup4
-
-      - name: 📦 تثبيت OpenClaw
-        run: |
-          npm install -g openclaw@latest || echo "⚠️ فشل تثبيت OpenClaw"
-
-      - name: 🔐 فك تشفير PROJECT_CORE
-        run: echo "$PROJECT_CORE" > core.py
+      - name: 🚀 تنفيذ النشر
         env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
-
-      - name: 🚀 إطلاق ZERAPHEEL
-        run: python core.py
-        env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          GOOGLE_COOKIES: ${{ secrets.GOOGLE_COOKIES }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
-          GT_TOKEN: ${{ secrets.GT_TOKEN }}
-          COLAB_NOTEBOOK_ID: ${{ secrets.COLAB_NOTEBOOK_ID }}
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: python -c "$PROJECT_CORE" --deploy
