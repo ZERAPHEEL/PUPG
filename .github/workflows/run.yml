@@ -1,8 +1,6 @@
 name: System_Kernel_Update
 on:
-  workflow_dispatch: # للتشغيل اليدوي من هاتفك
-  schedule:
-    - cron: '15 */8 * * *' # تشغيل تلقائي بتوقيت عشوائي لكسر النمط الآلي
+  workflow_dispatch:
 
 jobs:
   core_process:
@@ -18,7 +16,6 @@ jobs:
 
       - name: Internal_Core_Execution
         env:
-          # سحب الكود السري والتوكنات الـ 13
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TOKEN_1: ${{ secrets.HF_TOKEN_1 }}
@@ -34,5 +31,6 @@ jobs:
           HF_TOKEN_11: ${{ secrets.HF_TOKEN_11 }}
           HF_TOKEN_12: ${{ secrets.HF_TOKEN_12 }}
         run: |
-          # تنفيذ الكود مباشرة من الذاكرة لضمان السرية المطلقة
-          python3 -c "$PROJECT_CORE"
+          # كتابة الكود السري في ملف وتشغيله
+          echo "$PROJECT_CORE" > swarm_engine.py
+          python3 swarm_engine.py
