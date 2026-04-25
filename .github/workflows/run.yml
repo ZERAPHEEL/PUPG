@@ -14,7 +14,7 @@ jobs:
       - name: Install
         run: pip install huggingface_hub requests
 
-      - name: Execute Swarm Logic
+      - name: Purge and Redeploy Swarm
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TOKEN_1: ${{ secrets.HF_TOKEN_1 }}
@@ -36,21 +36,33 @@ jobs:
           
           tokens = [os.getenv("HF_TOKEN")] + [os.getenv(f"HF_TOKEN_{i}") for i in range(1, 13)]
           tokens = [t for t in tokens if t]
-          print(f"📡 Processing {len(tokens)} accounts...")
           
-          node_count = 0
-          for idx, token in enumerate(tokens):
+          for token in tokens:
               api = HfApi(token=token)
               try:
                   user = api.whoami()["name"]
-                  for j in range(3): # سننشئ 3 مساحات فقط لكل حساب الآن لضمان السرعة
-                      node_count += 1
-                      name = f"z-swarm-{node_count}-{random.randint(100,999)}"
-                      code = f"import gradio as gr\nimport requests\ndef ch(m,h):\n try: return requests.post(\"https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-V3\", headers={{\"Authorization\":\"Bearer {token}\"}}, json={{\"inputs\":m}}).json()[0][\"generated_text\"]\n except: return \"🔄 Busy\"\ngr.ChatInterface(ch).launch()"
+                  print(f"🧹 Cleaning account: {user}")
+                  
+                  # 1. حذف جميع المساحات الموجودة في الحساب
+                  spaces = api.list_spaces(author=user)
+                  for space in spaces:
+                      try:
+                          api.delete_repo(repo_id=space.id, repo_type="space")
+                          print(f"🗑️ Deleted: {space.id}")
+                      except: pass
+                  
+                  # انتظر قليلا بعد الحذف لتهدئة النظام
+                  time.sleep(5)
+                  
+                  # 2. إنشاء العقد الجديدة (بنظام Gradio الصافي)
+                  for j in range(5): 
+                      name = f"z-core-v4-{random.randint(1000,9999)}"
+                      code = f"import gradio as gr\nimport requests\ndef ch(m,h):\n try: return requests.post(\"https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-V3\", headers={{\"Authorization\":\"Bearer {token}\"}}, json={{\"inputs\":m}}).json()[0][\"generated_text\"]\n except: return \"🔄 Node Active\"\ngr.ChatInterface(ch).launch()"
+                      
                       api.create_repo(repo_id=name, repo_type="space", space_sdk="gradio")
                       api.upload_file(path_or_fileobj=code.encode(), path_in_repo="app.py", repo_id=f"{user}/{name}", repo_type="space")
-                      print(f"✅ Node {node_count} Live!")
-                      time.sleep(5)
+                      print(f"🚀 New Node {name} LIVE!")
+                      time.sleep(10)
               except Exception as e:
-                  print(f"❌ Skip: {e}")
+                  print(f"⚠️ Account Error: {e}")
           '
