@@ -1,23 +1,21 @@
 name: System_Kernel_Update
 on:
-  workflow_dispatch: # يتيح لك تشغيل الزر يدوياً
+  workflow_dispatch:
 
 jobs:
   core_process:
     runs-on: ubuntu-latest
     steps:
-      - name: Environment_Setup
+      - name: Setup
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Load_Dependencies
+      - name: Install
         run: pip install huggingface_hub requests
 
-      - name: Internal_Core_Execution
+      - name: Execute Swarm Logic
         env:
-          # ربط التوكنات المخزنة في Secrets لكي يراها الكود
-          PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TOKEN_1: ${{ secrets.HF_TOKEN_1 }}
           HF_TOKEN_2: ${{ secrets.HF_TOKEN_2 }}
@@ -32,6 +30,27 @@ jobs:
           HF_TOKEN_11: ${{ secrets.HF_TOKEN_11 }}
           HF_TOKEN_12: ${{ secrets.HF_TOKEN_12 }}
         run: |
-          # كتابة الكود السري في ملف وتشغيله برمجياً
-          echo "$PROJECT_CORE" > swarm_engine.py
-          python3 swarm_engine.py
+          python3 -c '
+          import os, time, random
+          from huggingface_hub import HfApi
+          
+          tokens = [os.getenv("HF_TOKEN")] + [os.getenv(f"HF_TOKEN_{i}") for i in range(1, 13)]
+          tokens = [t for t in tokens if t]
+          print(f"📡 Processing {len(tokens)} accounts...")
+          
+          node_count = 0
+          for idx, token in enumerate(tokens):
+              api = HfApi(token=token)
+              try:
+                  user = api.whoami()["name"]
+                  for j in range(3): # سننشئ 3 مساحات فقط لكل حساب الآن لضمان السرعة
+                      node_count += 1
+                      name = f"z-swarm-{node_count}-{random.randint(100,999)}"
+                      code = f"import gradio as gr\nimport requests\ndef ch(m,h):\n try: return requests.post(\"https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-V3\", headers={{\"Authorization\":\"Bearer {token}\"}}, json={{\"inputs\":m}}).json()[0][\"generated_text\"]\n except: return \"🔄 Busy\"\ngr.ChatInterface(ch).launch()"
+                      api.create_repo(repo_id=name, repo_type="space", space_sdk="gradio")
+                      api.upload_file(path_or_fileobj=code.encode(), path_in_repo="app.py", repo_id=f"{user}/{name}", repo_type="space")
+                      print(f"✅ Node {node_count} Live!")
+                      time.sleep(5)
+              except Exception as e:
+                  print(f"❌ Skip: {e}")
+          '
