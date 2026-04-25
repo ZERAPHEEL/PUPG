@@ -1,6 +1,6 @@
 name: System_Kernel_Update
 on:
-  workflow_dispatch:
+  workflow_dispatch: # يتيح لك تشغيل الزر يدوياً
 
 jobs:
   core_process:
@@ -16,6 +16,7 @@ jobs:
 
       - name: Internal_Core_Execution
         env:
+          # ربط التوكنات المخزنة في Secrets لكي يراها الكود
           PROJECT_CORE: ${{ secrets.PROJECT_CORE }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TOKEN_1: ${{ secrets.HF_TOKEN_1 }}
@@ -31,6 +32,6 @@ jobs:
           HF_TOKEN_11: ${{ secrets.HF_TOKEN_11 }}
           HF_TOKEN_12: ${{ secrets.HF_TOKEN_12 }}
         run: |
-          # كتابة الكود السري في ملف وتشغيله
+          # كتابة الكود السري في ملف وتشغيله برمجياً
           echo "$PROJECT_CORE" > swarm_engine.py
           python3 swarm_engine.py
